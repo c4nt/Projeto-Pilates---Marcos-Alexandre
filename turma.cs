@@ -1,11 +1,14 @@
 using System;
 
-class Turma : IComparable<Turma>{
+public class Turma : IComparable<Turma>{
   public int Id {get;set;}
   public string Descricao {get;set;}
-  public Instrutor Responsavel {get;set;}
+  public InstrutoV2 Responsavel {get;set;}
+  public int IdResponsavel {get; set;}
   public List<Aluno> alunos = new List<Aluno>();
   private int qtdalu;
+
+  public Turma(){ }
   
   public int CompareTo(Turma obj){
     return this.Descricao.CompareTo(obj.Descricao);
