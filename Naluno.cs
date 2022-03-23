@@ -62,29 +62,18 @@ class Naluno {
     if(p != null) p.ExcAlu(a); 
   }
 
-  public void AtualizarListaPessoa(){
-    for(int i = 0; i < alunos.Count(); i++){
-        Aluno a = alunos[i];
-        Pacote pac = Npacote.Singleton.Listar(a.IdPacote);
-            if(pac != null){
-              a.Pacote = pac;
-              pac.AdcAlu(a);}
-        }
-      
+  public void AtualizarListaPessoa2(List<Aluno> alist){
+    foreach(Aluno a in alist){
+      Pacote pac = Npacote.Singleton.Listar(a.IdPacote);
+      Turma tur = Nturma.Singleton.Listar(a.IdTurma);
+      a.Pacote = pac;
+      pac.AdcAlu(a);
+      a.Turma = tur;
+      tur.AlunoInserir(a);
+      alunos.Add(a);
     }
 
-    public void AtualizarListaPessoa2(List<Aluno> alist){
-      foreach(Aluno a in alist){
-        Pacote pac = Npacote.Singleton.Listar(a.IdPacote);
-        Turma tur = Nturma.Singleton.Listar(a.IdTurma);
-        a.Pacote = pac;
-        pac.AdcAlu(a);
-        a.Turma = tur;
-        tur.AlunoInserir(a);
-        alunos.Add(a);
-      }
-      
-    }
+  }
 
   public List<Aluno> PadraoDeLista(){
     List<Aluno> aux = new List<Aluno>();
