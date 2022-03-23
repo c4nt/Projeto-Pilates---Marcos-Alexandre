@@ -1,12 +1,17 @@
 using System;
 
-class Aluno : IComparable<Aluno> {
+public class Aluno : IComparable<Aluno> {
   public int Id {get;set;}
   public string Nome {get;set;}
   public int Idade {get;set;}
   public Pacote Pacote {get; set;}
 
   public Turma Turma {get;set;}
+  public int IdPacote {get; set;}
+
+  public int IdTurma {get;set;}
+
+  public Aluno(){ }
 
   public int CompareTo(Aluno obj){
     return this.Nome.CompareTo(obj.Nome);
@@ -14,13 +19,17 @@ class Aluno : IComparable<Aluno> {
 
   public void Apresentar(){
     if (Turma == null && Pacote == null)
-      Console.WriteLine("Matrícula: " + Id + " / Nome: " + Nome +" / Idade: "+Idade+" / Turma : sem cadastro " + " / Pacote: sem cadastro "+" / Aulas por semana: 0"+" / Valore da mensalidade: 0");
+      Console.WriteLine($"\n Aluno: {Nome} \n Matrícula: {Id} \n Turma: Sem Cadastro \n Aulas por Semana: 0 \n Valor da Mensalidade: 0 \n");
+      
     if (Turma != null && Pacote == null)
-      Console.WriteLine("Matrícula: " + Id + " / Nome: " + Nome +" / Idade: "+Idade+ " / Turma : "+ Turma.Descricao + " / Pacote: sem cadastro ");
+      Console.WriteLine($" Aluno: {Nome} \n Matrícula: {Id} \n Turma: {Turma.Descricao} \n Aulas por Semana: 0 \n Valor da Mensalidade: 0 \n");
+     
     if (Pacote != null && Turma == null)
-      Console.WriteLine("Matrícula: " + Id + " / Nome: " + Nome +" / Idade: "+Idade+ " / Turma : sem cadastro " + " / Pacote : "+Pacote.Descricao+" / Aulas por semana: "+Pacote.QtdAulas/4+" / Valor da mensalidade: "+Pacote.ValorPacote.ToString("0.00"));
+      Console.WriteLine($" Aluno: {Nome} \n Matrícula: {Id} \n Turma: Sem Cadastro \n Aulas por Semana: {Pacote.QtdAulas/4} \n Valor da Mensalidade: {Pacote.ValorPacote.ToString("0.00")} \n");
     if ((Pacote != null && Turma != null))
-      Console.WriteLine("Matrícula: " + Id + " / Nome: " + Nome +" / Idade: "+Idade+ " / Turma : " + Turma.Descricao + " / Pacote : " +Pacote.Descricao+" / Aulas por semana: "+Pacote.QtdAulas/4+" / Valor da mensalidade: "+Pacote.ValorPacote.ToString("0.00"));
+      Console.WriteLine($" Aluno: {Nome} \n Matrícula: {Id} \n Turma: {Turma.Descricao} \n Aulas por Semana: {Pacote.QtdAulas/4} \n Valor da Mensalidade: {Pacote.ValorPacote.ToString("0.00")} \n");
+      Console.WriteLine(("").PadRight(42, '-') );
+      Console.WriteLine();
   }
   
   
