@@ -1,14 +1,27 @@
-﻿using System;
+using System;
+using System.Linq;
 
 class MainClass {
-  private static Nturma nturma = new Nturma();
-  private static Naluno naluno = new Naluno();
-  private static Npacote npacote = new Npacote();
+  private static Nturma nturma = Nturma.Singleton;
+  private static Naluno naluno = Naluno.Singleton;
+  private static Npacote npacote = Npacote.Singleton;
   private static Ninstrutor ninstrutor = new Ninstrutor();
+  private static NinstrutorV2 ninstrutorV2 = NinstrutorV2.Singleton;
   
   public static void Main() {
     int op = 0;
     int perfil = 0;
+
+    try{
+      
+        ninstrutorV2.DesSerializarInstrutoresV2();
+        nturma.DesSerializarTurmas();
+        npacote.DesSerializarPacotes();
+        naluno.DesSerializarAlunos();
+    }catch (Exception erro){
+     Console.WriteLine(erro.Message);
+       }
+
     do {
       try {
         if(perfil == 0){
@@ -19,7 +32,7 @@ class MainClass {
         if(perfil == 1){
         op = MenuInstrutor();
         switch(op) {
-          case 1 : ListarTurmas(); break;
+          case 1 : ListaTurmaLinq(); break;
           case 2 : InserirTurma(); break;
           case 3 : AtualizarTurma(); break;
           case 4 : ExcluirTurma(); break;
@@ -28,13 +41,15 @@ class MainClass {
           case 7 : CadastrarPac(); break;
           case 8 : ListarPac(); break;
           case 9 : CadastrarAlunoPac(); break;
-          case 10 : ListarAdesoesPac(); break;
+          case 10 : ListaAdesoesLinq(); break;
           case 11 : AtualizarPac(); break;
           case 12 : ExcluirPac(); break;
-          case 13 : CadastrarInstrutor(); break;
-          case 14 : AtualizarCadastroInst(); break;
-          case 15 : ExcluirCadastroInst(); break;
-          case 16 : ListarInstrutores(); break;
+          case 13 : CadastrarInstV2(); break;
+          case 14 : AtualizarInstV2(); break;
+          case 15 : ExcluirInstV2(); break;
+          case 16 : ListarInstV2(); break;
+          case 17 : ApresentarResumo(); break;
+          
           case 99 : perfil = 0; break;
         }
         }
@@ -55,7 +70,17 @@ class MainClass {
         op = 100;
       }
     } while (op != 0);
-    Console.WriteLine ("----- Programa Encerrado ------------");    
+    Console.WriteLine ("----- Programa Encerrado ------------");
+
+    try{
+      naluno.SerializarAlunos();
+      nturma.SerializarTurmas();
+      ninstrutorV2.SerializarInstrutoresV2();
+      npacote.SerializarPacotes();
+    }catch (Exception erro){
+     Console.WriteLine(erro.Message);
+       }  
+           
   }
 
   public static int MenuInicial() {
@@ -92,7 +117,10 @@ class MainClass {
     Console.WriteLine("13 - Cadastrar Instrutor");
     Console.WriteLine("14 - Atualizar Cadastro de Instrutor");
     Console.WriteLine("15 - Excluir Cadastro de Instrutor");
-    Console.WriteLine("16 - Relação de instrutores");
+    Console.WriteLine("16 - Relação de instrutores ");
+    Console.WriteLine();
+    Console.WriteLine("17 - Apresentar Resumo das Operações");
+    Console.WriteLine();
     Console.WriteLine("99 - Voltar ao menu inicial");
     Console.WriteLine("0 - Encerrar Programa");
     Console.WriteLine("-------------------------------------\n");
@@ -119,72 +147,78 @@ class MainClass {
     return op; 
   }
 
-
-  
-  public static void ListarTurmas() {
-    Console.WriteLine("----- Lista de Turmas -----");
-    List<Turma> ts = nturma.Listar();
-    if (ts.Count() == 0) {
-      Console.WriteLine("Nenhuma turma cadastrada");
-      return;
-    }
-    foreach(Turma t in ts) Console.WriteLine(t);
-    Console.WriteLine();  
+  public static void ListaTurmaLinq(){
+    List<Turma> tm = nturma.Listar(); 
+    
+    var tms = tm.OrderBy(t => t.Descricao).ThenBy(t => t.AlunoListar().Count());
+    
+    if(tms.Count() == 0) {Console.WriteLine("Nenhuma turma cadastrada no sistema"); return;}
+    Console.WriteLine($"------- Turmas Cadastradas no Sistema ------- \n");
+    foreach(var obj in tms) Console.WriteLine($" ID: {obj.Id} \n Descrição: {obj.Descricao} \n Responsável: {obj.Responsavel.Nome} \n Quantidade de alunos matriculados: {obj.AlunoListar().Count()} \n");
   }
+
+
   public static void InserirTurma() {
     Console.WriteLine("----- Cadastro de Turmas -----");
     
     Console.Write("Informe a descrição da Turma: ");
     string descricao = Console.ReadLine();
-    ListarInstrutores();
+    ListarInstV2();
     Console.Write("Informe o ID do instrutor para essa turma: ");
     int id = int.Parse(Console.ReadLine());
-    Instrutor inst = ninstrutor.Listar(id);
-    Turma t = new Turma {Descricao = descricao, Responsavel = inst};
+    InstrutoV2 inst = ninstrutorV2.Listar(id);
+    Turma t = new Turma {Descricao = descricao, Responsavel = inst, IdResponsavel = id};
     nturma.Inserir(t);
     
   }
 
   public static void AtualizarTurma() {
     Console.WriteLine("----- Atualização de Turma -----\n");
-    ListarTurmas();
+    ListaTurmaLinq();
     Console.Write("Informe o Id da turma que sera atualizada: ");
-    int id = int.Parse(Console.ReadLine()); 
+    int id = int.Parse(Console.ReadLine());
+    Turma tmref = nturma.Listar(id);
+    InstrutoV2 instref = tmref.Responsavel;
     Console.Write("Informe a nova descrição: ");
     string descricao = Console.ReadLine();
-    ListarInstrutores();
+    ListarInstV2();
     Console.Write("Informe o ID do instrutor para essa turma: ");
     int idinst = int.Parse(Console.ReadLine());
-    Instrutor inst = ninstrutor.Listar(idinst);
-    Turma t = new Turma {Id = id, Descricao = descricao, Responsavel = inst};
+    InstrutoV2 inst = ninstrutorV2.Listar(idinst);
+    Turma t = new Turma {Id = id, Descricao = descricao, Responsavel = inst, IdResponsavel = idinst};
     nturma.Atualizar(t);
-    
-    
-  }
+
+    List<Turma> tmsnulas = instref.ListarTurmasInst();
+
+    foreach(Turma trm in tmsnulas) 
+      if(trm.Responsavel == null || trm.Responsavel != instref) instref.ExcTurmaInst(trm);
+    }
 
   public static void ExcluirTurma() {
     Console.WriteLine("----- Exclusão de Turmas -----");
-    ListarTurmas();
+    ListaTurmaLinq();
     Console.Write("Informe o Id da turma que será excluida: ");
     int id = int.Parse(Console.ReadLine());
+    Turma tmref = nturma.Listar(id);
+    InstrutoV2 instref = tmref.Responsavel;
 
     Turma t = nturma.Listar(id);
     nturma.Excluir(t);
-    
+    instref.ExcTurmaInst(t);
     
   }
 
-
-  public static void ListarAlunos() {
+  public static async void ListarAlunos() {
     Console.WriteLine("----- Relação de Alunos -----");
     List<Aluno> als = naluno.Listar();
     if (als.Count() == 0) {
       Console.WriteLine("Nenhum aluno foi cadastrado ainda");
       return;
     }
-    foreach(Aluno a in als) a.Apresentar();
-    Console.WriteLine();  
+    foreach(Aluno a in als) a.Apresentar(); 
+    Console.WriteLine();
   }
+
   public static void CadastrarAluno() {
     Console.WriteLine("----- Cadastro de Alunos -----");
     
@@ -235,7 +269,8 @@ class MainClass {
     int idade = int.Parse(Console.ReadLine());
     //Pacote p = npacote.Listar(idpac);
     //Turma t = nturma.Listar(idturma);    
-    Aluno a = new Aluno {Id = id, Nome = nome, Turma = aln.Turma, Pacote = aln.Pacote};
+    Aluno a = new Aluno {Id = id, Nome = nome, Idade = idade, Turma = aln.Turma, Pacote = aln.Pacote};
+    
     naluno.Atualizar(a);
   }
 
@@ -247,12 +282,11 @@ class MainClass {
     int id = int.Parse(Console.ReadLine());
     Aluno aln = naluno.Listar(id);
     Console.WriteLine();
-    ListarTurmas();
+    ListaTurmaLinq();
     Console.Write("Informe o código da turma para esse aluno: ");
     int idturma = int.Parse(Console.ReadLine());
-    
-    Turma t = nturma.Listar(idturma);    
-    Aluno a = new Aluno {Id = aln.Id, Nome = aln.Nome, Turma = t, Pacote = aln.Pacote};
+    Turma t = nturma.Listar(idturma);   
+    Aluno a = new Aluno {Id = aln.Id, Nome = aln.Nome, Idade = aln.Idade, Turma = t, Pacote = aln.Pacote};
     naluno.Atualizar(a);
   }
 
@@ -267,22 +301,21 @@ class MainClass {
     ListarPac();
     Console.Write("Informe o ID do pacote para esse aluno: ");
     int idpac = int.Parse(Console.ReadLine());
-    
-    Pacote p = npacote.Listar(idpac);
-        
-    Aluno a = new Aluno {Id = aln.Id, Nome = aln.Nome, Turma = aln.Turma, Pacote = p};
+    Pacote p = npacote.Listar(idpac);  
+    Aluno a = new Aluno {Id = aln.Id, Nome = aln.Nome, Idade = aln.Idade, Turma = aln.Turma, Pacote = p};
     naluno.Atualizar(a);
   }
 
   public static void ListarPac() {
-    Console.WriteLine("----- Pacotes Cadastrados -----");
     List<Pacote> pacs = npacote.Listar();
     if (pacs.Count() == 0) {
       Console.WriteLine("Nenhum pacote foi cadastrado no sistema");
       return;
     }
-    foreach(Pacote p in pacs) Console.WriteLine(p);
-    Console.WriteLine();  
+    var pacList = pacs.OrderByDescending( p => p.ListarAdesoes().Count());
+    Console.WriteLine("Lista de pacotes cadastrados no sistema: \n");
+    foreach(var p in pacList){ Console.WriteLine($" Id: {p.Id} \n Descrição do Pacote: {p.Descricao} \n Quantidade de aulas mês: {p.QtdAulas} \n Valor da mensalidade: {p.ValorPacote} \n Adesões: {p.ListarAdesoes().Count()} \n");
+    Console.WriteLine("---------------------------------------- \n");}  
   }
   public static void CadastrarPac() {
     Console.WriteLine("----- Criar Pacote -----");
@@ -325,7 +358,22 @@ class MainClass {
     npacote.Atualizar(p);
   }
 
-  public static void ListarAdesoesPac() {
+  public static void ListaAdesoesLinq(){
+    ListarPac();
+    Console.Write("Informe o ID do pacote que será listado: ");
+    int id = int.Parse(Console.ReadLine());
+    Pacote p = npacote.Listar(id);
+    
+    var ad = naluno.Listar().Where( v => v.Pacote == p);
+    
+    Console.WriteLine();
+    Console.WriteLine($"------- Relação de Alunos - {p.Descricao} -------  \n");
+    foreach(var obj in ad) Console.WriteLine($" Aluno: {obj.Nome} / Matrícula: {obj.Id} / Turma: {obj.Turma.Descricao}");
+    Console.WriteLine($"\n Total de alunos matriculados: {p.ListarAdesoes().Count()} ");
+    Console.WriteLine("--------------------------------------------- \n");
+  }
+
+  /*public static void ListarAdesoesPac() {
     Console.WriteLine("----- Lista de Pacotes -----");
     ListarPac();
     Console.Write("Informe o Id do pacote que será verificado: ");
@@ -341,116 +389,106 @@ class MainClass {
     foreach(Aluno t in alns) Console.WriteLine($"\n ---------- Alunos que aderiram ao {p.Descricao}  ----------- \n \n Nome do Aluno: "+t.Nome+" / Matrícula do Aluno: "+t.Id);
     Console.WriteLine();  
   }
+  */
 
-  public static void ListarInstrutores() {
-    Console.WriteLine("----- Relação de Instrutores ----- ");
-    List<Instrutor> insts = ninstrutor.Listar();
-    List<Turma> turmas_syst = new List<Turma>();
-    turmas_syst = nturma.Listar();
-    Instrutor escolha;
-    int qtd = 0;
-    
-    if (insts.Count() == 0) {
-      Console.WriteLine("Nenhum instrutor foi cadastrado ainda");
+public static void ListarInstV2() {
+    Console.WriteLine("------------------ Instrutores Cadastrados ------------------");
+    List<InstrutoV2> instv2s = ninstrutorV2.Listar();
+    if (instv2s.Count() == 0) {
+      Console.WriteLine("Nenhum Instrutor Cadastrado");
       return;
     }
-
-    Instrutor inst;
-    foreach(Instrutor a in insts){ 
-      qtd = qtd + 1;
-      Console.WriteLine($"\n{qtd}º Instrutor: \n{a.ToString()}");
-      Console.WriteLine($" \nTurmas atribuídas ao instrutor(a) {a.Nome}:");
-      inst = ninstrutor.Listar(a.Id);
-      foreach(Turma t in turmas_syst) if(t.Responsavel == inst) Console.WriteLine($"Turma: {t.Descricao} / Quantidade de alunos: {t.alunos.Count()}");
-      }
+    foreach(InstrutoV2 t in instv2s) t.Apresentar();
+    Console.WriteLine();  
   }
-  public static void CadastrarInstrutor() {
-    Console.WriteLine("----- Cadastro de Instrutores -----");
+  public static void CadastrarInstV2() {
+    Console.WriteLine("----- Cadastrar Instrutor -----");
     
-    Console.Write("Informe o nome do Instrutor: ");
+    Console.Write("Informe o nome deste instrutor: ");
     string nome = Console.ReadLine();
-    Console.Write("Formação profissional: ");
-    string form = Console.ReadLine();    
-    Instrutor inst = new Instrutor {Nome = nome, Formacao = form};
-    
-    ninstrutor.Inserir(inst);
+    Console.Write("Formaçao profissional: ");
+    string form = Console.ReadLine();   
+
+    InstrutoV2 i = new InstrutoV2 {Nome = nome, Formacao = form};
+
+    ninstrutorV2.Inserir(i);
   }
 
-  public static void VerificarDadosInst() {
-    Console.WriteLine("----- Informe a Matrícula do Instrutor para verificação: -----\n");
-    ListarInstrutores();
-    Console.Write("Matrícula: ");
+  public static void ExcluirInstV2() {
+    Console.WriteLine("----- Excluir Instrutor -----");
+    ListarInstV2();
+    Console.Write("Informe o ID do instrutor que será excluido: ");
     int id = int.Parse(Console.ReadLine());
-    Instrutor inst = ninstrutor.Listar(id);
-    Console.WriteLine();
-    Console.WriteLine("----- Dados referentes a essa Matrícula: -----\n");
-    Console.WriteLine(ninstrutor.Listar(id));
-    Console.WriteLine();
-    Console.WriteLine("------Turmas atribuidas a esse instrutor ----- \n");
-    List<Turma> turmas_syst = new List<Turma>();
-    turmas_syst = nturma.Listar();
-    foreach(Turma tm in turmas_syst) 
-      if(tm.Responsavel == inst) Console.WriteLine(tm);
-      else Console.WriteLine("  - Esse instrutor não possui turmas atribuídas a ele -      ");
+    InstrutoV2 p = ninstrutorV2.Listar(id);
+    ninstrutorV2.Excluir(p);
   }
 
-  public static void ExcluirCadastroInst() {
-    Console.WriteLine("----- Excluir Cadastro -----");
-    ListarInstrutores();
-    Console.Write("Informe a matrícula do instrutor que será excluido: ");
+  public static void AtualizarInstV2() {
+    Console.WriteLine("----- Atualizar informações do Instrutor -----\n");
+    ListarInstV2();
+    Console.Write("Informe o ID do instrutor que sera atulizado: ");
     int id = int.Parse(Console.ReadLine());
-    Instrutor inst = ninstrutor.Listar(id);
-    ninstrutor.Excluir(inst);
-    List<Turma> tms = new List<Turma>();
-    tms = nturma.Listar();
-    foreach(Turma t in tms)
-      if(t.Responsavel == inst) t.Responsavel = null; 
-
-  }
-
-  public static void AtualizarCadastroInst() {
-    Console.WriteLine("----- Atualização de Cadastro -----");
-    ListarInstrutores();
-    Console.Write("Informe a matrícula do instrutor que será atualizado: ");
-    int id = int.Parse(Console.ReadLine());
-    Console.Write("Informe o nome do instrutor: ");
+    Console.Write("Informe o nome desse instrutor: ");
     string nome = Console.ReadLine();
     Console.Write("Formação profissional: ");
     string form = Console.ReadLine();
-
-    Instrutor inst = new Instrutor {Id = id, Nome = nome, Formacao = form};
     
-    ninstrutor.Atualizar(inst);
+    InstrutoV2 p = new InstrutoV2 {Id = id, Nome = nome, Formacao = form};
+
+    ninstrutorV2.Atualizar(p);
   }
 
-  public static void ExcluirTurmaDoInst() {
-    Console.WriteLine("----- Selecionar Instrutor -----");
-    ListarInstrutores();
-    Console.Write("Informe o ID do instrutor: ");
+  public static void ListarTurmasInstV2() {
+    Console.WriteLine("----- Lista de Instrutores -----");
+    ListarInstV2();
+    Console.Write("Informe o Id do Instrutor que será verificado: ");
     int id = int.Parse(Console.ReadLine());
-    ListarTurmas();
-    Console.Write("Informe o ID da turma que será excluída: ");
-    int idturma = int.Parse(Console.ReadLine());
-    Turma t = nturma.Listar(idturma);
-    Instrutor inst = ninstrutor.Listar(id);
-    t.Responsavel = null;
-    
-  }
+    InstrutoV2 inst = ninstrutorV2.Listar(id);
+    List<Turma> tms = new List<Turma>();
+    tms = inst.ListarTurmasInst();
 
-  public static void ListarTurmaDeInstrutor() {
-    Console.WriteLine("----- Listar as turmas de um instrutor----------");
-    ListarInstrutores();
-    Console.WriteLine("Digite o ID do instrutor para a listagem: ");
-    int id = int.Parse(Console.ReadLine());
-    Instrutor inst = ninstrutor.Listar(id);
-    List<Turma> turmas_syst = new List<Turma>();
-    turmas_syst = nturma.Listar();
-    foreach(Turma tm in turmas_syst) 
-      if(tm.Responsavel == inst) Console.WriteLine(tm);
-
-
+    if (tms.Count() == 0) {
+      Console.WriteLine($"\n ---------- Turmas atribuídas ao instrutor: {inst.Nome}  ----------- \n \n  Nenhuma turma atribuída a esse instrutor");
+      return;
     }
-  
+    foreach(Turma t in tms) Console.WriteLine($"\n ---------- Turmas atribuídas ao instrutor: {inst.Nome}  ----------- \n \n Descrição da Turma: "+t.Descricao+" / Quantidade de Alunos: "+t.alunos.Count());
+    Console.WriteLine();  
+  }
 
+  /*public static void ListarDadosAluno(){
+    List<Aluno> teste = naluno.Listar();
+    var listAlnTur = naluno.Listar().Join(nturma.Listar(), a => a.Turma, t => t, 
+    (a,t) => new {a.Id, a.Nome, t.Descricao, t.Responsavel});
+    var listAlnpac = naluno.Listar().Join(npacote.Listar(), a => a.Pacote, p => p, 
+    (a,p) => new {a.Id, p.Descricao, p.QtdAulas, p.ValorPacote});
+    var listMix = listAlnTur.Join(listAlnpac, a => a.Id, b => b.Id, (a, b) => new {a.Id, a.Nome, a.Descricao, b.QtdAulas, b.ValorPacote});
+    
+    Console.WriteLine("-----------Alunos Cadastrados------------- \n");
+    foreach(var obj in listMix){
+    Console.WriteLine($" Aluno: {obj.Nome} \n Matrícula: {obj.Id} \n Turma: {obj.Descricao} \n Aulas por Semana: {obj.QtdAulas/4} \n Valor da Mensalidade: {obj.ValorPacote.ToString("0.00")} \n");
+    Console.WriteLine(("").PadRight(42, '-') );
+    Console.WriteLine();}
+    var x = listMix.Select(y => y.ValorPacote);
+    var fat = x.Sum();
+    Console.WriteLine($" Total de Alunos: {naluno.Listar().Count()} alunos");
+    Console.WriteLine($" Faturamento Mensal: {fat, 8:c} reais");
+    Console.WriteLine(("").PadRight(42,'-'));
+    
+    
+  }
+  */
+
+  public static void ApresentarResumo(){
+    var entradas = naluno.Listar().Where(a => a.Pacote != null);
+    var x = entradas.Select(y => y.Pacote.ValorPacote);
+    var fat = x.Sum();
+    Console.WriteLine("----------- Resumo da Operação: ----------- \n");
+    Console.WriteLine($" Total de alunos matriculados : {naluno.Listar().Count()} alunos");
+    Console.WriteLine($" Total de turmas ativas : {nturma.Listar().Count()} turmas");
+    Console.WriteLine($" Total de pacotes disponíveis : {nturma.Listar().Count()} turmas");
+    Console.WriteLine($" Total de instrutores cadastrados : {ninstrutorV2.Listar().Count()} instrutores");
+    Console.WriteLine($" Faturamento Mensal: {fat, 8:c} reais \n");
+    Console.WriteLine(("").PadRight(42,'-'));
+  }
 
 }
