@@ -1,6 +1,13 @@
 using System;
+using System.IO;
+using System.Text;
+using System.Xml.Serialization;
+using System.Linq;
 
 class Nturma {
+  private Nturma(){}
+  static Nturma obj = new Nturma();
+  public static Nturma Singleton {get => obj;}
   private List<Turma> turmas = new List<Turma>();
   private int nt;
 
@@ -21,6 +28,8 @@ class Nturma {
       if(obj.Id > max) max = obj.Id;
     t.Id = max + 1;
     turmas.Add(t);
+    InstrutoV2 inst = t.Responsavel;
+    if (inst != null) inst.AdcTurmaInst(t);
   } 
 
   public void Atualizar(Turma t) {
@@ -30,6 +39,13 @@ class Nturma {
     // Altera os dados da turma existente atribuindo o novo valor definido
     t_atual.Descricao = t.Descricao;
     t_atual.Responsavel = t.Responsavel;
+    
+    if (t_atual.Responsavel != null) 
+      t_atual.Responsavel.ExcTurmaInst(t_atual);
+    t_atual.Responsavel = t.Responsavel;
+    t_atual.IdResponsavel = t.IdResponsavel;
+    if (t_atual.Responsavel != null)
+      t_atual.Responsavel.AdcTurmaInst(t_atual);
   } 
 
 
@@ -42,4 +58,38 @@ class Nturma {
     foreach(Aluno p in xs) p.Turma = null; 
 
   } 
+
+  public List<Turma> PadraoDeLista(){
+    List<Turma> aux = new List<Turma>();
+    foreach(Turma t in turmas){
+        Turma tm = new Turma{Id = t.Id, Descricao = t.Descricao, Responsavel = null, IdResponsavel = t.IdResponsavel};
+        aux.Add(tm);
+    }
+    return aux;
+    }
+
+  public void AtualizarListaTurma(List<Turma> tlist){
+      foreach(Turma t in tlist){
+        InstrutoV2 iv2 = NinstrutorV2.Singleton.Listar(t.IdResponsavel);
+        
+        t.Responsavel = iv2;
+        iv2.AdcTurmaInst(t);
+        turmas.Add(t);
+      }
+      
+    }  
+
+  public void SerializarTurmas(){
+    Arquivo<List<Turma>> arq = new Arquivo<List<Turma>>();
+    arq.Salvar("./ListaNturma.xml", PadraoDeLista());
+    
+    }
+
+  
+  public void DesSerializarTurmas(){
+    Arquivo<List<Turma>> arq = new Arquivo<List<Turma>>();
+    List<Turma> tms = arq.Abrir("./ListaNturma.xml");
+    AtualizarListaTurma(tms);        
+    Console.WriteLine("Dados recuperados de: ListaNturma.xml");
+     } 
 }
