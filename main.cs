@@ -5,7 +5,6 @@ class MainClass {
   private static Nturma nturma = Nturma.Singleton;
   private static Naluno naluno = Naluno.Singleton;
   private static Npacote npacote = Npacote.Singleton;
-  private static Ninstrutor ninstrutor = new Ninstrutor();
   private static NinstrutorV2 ninstrutorV2 = NinstrutorV2.Singleton;
   
   public static void Main() {
@@ -373,24 +372,6 @@ class MainClass {
     Console.WriteLine("--------------------------------------------- \n");
   }
 
-  /*public static void ListarAdesoesPac() {
-    Console.WriteLine("----- Lista de Pacotes -----");
-    ListarPac();
-    Console.Write("Informe o Id do pacote que será verificado: ");
-    int id = int.Parse(Console.ReadLine());
-    Pacote p = npacote.Listar(id);
-    List<Aluno> alns = new List<Aluno>();
-    alns = p.ListarAdesoes();
-
-    if (alns.Count() == 0) {
-      Console.WriteLine($"\n ---------- Alunos que aderiram ao {p.Descricao}  ----------- \n \n  Nenhuma aluno cadastrado nesse pacote");
-      return;
-    }
-    foreach(Aluno t in alns) Console.WriteLine($"\n ---------- Alunos que aderiram ao {p.Descricao}  ----------- \n \n Nome do Aluno: "+t.Nome+" / Matrícula do Aluno: "+t.Id);
-    Console.WriteLine();  
-  }
-  */
-
 public static void ListarInstV2() {
     Console.WriteLine("------------------ Instrutores Cadastrados ------------------");
     List<InstrutoV2> instv2s = ninstrutorV2.Listar();
@@ -454,29 +435,6 @@ public static void ListarInstV2() {
     foreach(Turma t in tms) Console.WriteLine($"\n ---------- Turmas atribuídas ao instrutor: {inst.Nome}  ----------- \n \n Descrição da Turma: "+t.Descricao+" / Quantidade de Alunos: "+t.alunos.Count());
     Console.WriteLine();  
   }
-
-  /*public static void ListarDadosAluno(){
-    List<Aluno> teste = naluno.Listar();
-    var listAlnTur = naluno.Listar().Join(nturma.Listar(), a => a.Turma, t => t, 
-    (a,t) => new {a.Id, a.Nome, t.Descricao, t.Responsavel});
-    var listAlnpac = naluno.Listar().Join(npacote.Listar(), a => a.Pacote, p => p, 
-    (a,p) => new {a.Id, p.Descricao, p.QtdAulas, p.ValorPacote});
-    var listMix = listAlnTur.Join(listAlnpac, a => a.Id, b => b.Id, (a, b) => new {a.Id, a.Nome, a.Descricao, b.QtdAulas, b.ValorPacote});
-    
-    Console.WriteLine("-----------Alunos Cadastrados------------- \n");
-    foreach(var obj in listMix){
-    Console.WriteLine($" Aluno: {obj.Nome} \n Matrícula: {obj.Id} \n Turma: {obj.Descricao} \n Aulas por Semana: {obj.QtdAulas/4} \n Valor da Mensalidade: {obj.ValorPacote.ToString("0.00")} \n");
-    Console.WriteLine(("").PadRight(42, '-') );
-    Console.WriteLine();}
-    var x = listMix.Select(y => y.ValorPacote);
-    var fat = x.Sum();
-    Console.WriteLine($" Total de Alunos: {naluno.Listar().Count()} alunos");
-    Console.WriteLine($" Faturamento Mensal: {fat, 8:c} reais");
-    Console.WriteLine(("").PadRight(42,'-'));
-    
-    
-  }
-  */
 
   public static void ApresentarResumo(){
     var entradas = naluno.Listar().Where(a => a.Pacote != null);
