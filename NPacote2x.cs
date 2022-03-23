@@ -1,6 +1,13 @@
 using System;
+using System.IO;
+using System.Text;
+using System.Xml.Serialization;
+using System.Linq;
 
-class Npacote{
+public class Npacote{
+    private Npacote(){}
+    static Npacote obj = new Npacote();
+    public static Npacote Singleton {get => obj;}
     private List<Pacote> pacotes = new List<Pacote>();
 
 
@@ -44,5 +51,28 @@ class Npacote{
         p_atual.ValorPacote = p.ValorPacote;
         
   }
+
+  public List<Pacote> PadraoDeLista(){
+        List<Pacote> aux = new List<Pacote>();
+        foreach(Pacote p in pacotes){
+            Pacote pac = new Pacote{Id = p.Id, Descricao = p.Descricao, QtdAulas = p.QtdAulas, ValorPacote = p.ValorPacote};
+            aux.Add(pac);
+        }
+        return aux;
+    }
+
+
+  public void SerializarPacotes(){
+        Arquivo<List<Pacote>> arq = new Arquivo<List<Pacote>>();
+        arq.Salvar("./ListaNpacotes.xml", PadraoDeLista());
+    }
+
+  
+  public void DesSerializarPacotes(){
+        Arquivo<List<Pacote>> arq = new Arquivo<List<Pacote>>();
+        pacotes = arq.Abrir("./ListaNpacotes.xml");
+        
+        Console.WriteLine("Dados recuperados de: ListaNpacote.xml");
+     } 
 
 }
