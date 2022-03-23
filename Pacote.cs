@@ -1,12 +1,13 @@
 using System;
 
-class Pacote : IComparable<Pacote>{
+public class Pacote : IComparable<Pacote>{
     public int Id {get;set;}
     public string Descricao {get;set;}
     public int QtdAulas {get;set;}
     public int ValorPacote {get;set;}
     private List<Aluno> adesoes = new List<Aluno>();
 
+    public Pacote(){ }
     
     public int CompareTo(Pacote obj){
         return this.Descricao.CompareTo(obj.Descricao);
